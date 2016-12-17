@@ -12,8 +12,11 @@ let palettes = require('nice-color-palettes/500');
 let theme = require('settings-panel/theme/flat')
 const tap = require('tap-to-start')
 const isMobile = require('is-mobile')()
-
 let colormaps = {};
+
+//bipolar colormaps
+palettes = [];
+let bipolarNames = 'spring bluered rdbu picnic portland viridis warm temperature'.split(' ')
 
 for (var name in colorScales) {
 	if (name === 'alpha') continue;
@@ -21,6 +24,7 @@ for (var name in colorScales) {
 	if (name === 'rainbow') continue;
 	if (name === 'rainbow-soft') continue;
 	if (name === 'phase') continue;
+	if (bipolarNames.indexOf(name) < 0) continue;
 
 	colormaps[name] = colormap({
 		colormap: colorScales[name],
@@ -29,15 +33,16 @@ for (var name in colorScales) {
 	});
 	palettes.push(colormaps[name]);
 }
-
-palettes = palettes
+// palettes = palettes
 //filter not readable palettes
-.filter((palette) => {
-	return Color.isReadable(palette[0], palette.slice(-1)[0], {
-		level:"AA", size:"large"
-	});
-});
+// .filter((palette) => {
+// 	return Color.isReadable(palette[0], palette.slice(-1)[0], {
+// 		level:"AA", size:"large"
+// 	});
+// });
 
+
+let defaultPalette = palettes[Math.floor(Math.random() * palettes.length)];
 
 insertCss(`
 	select option {
@@ -53,7 +58,7 @@ insertCss(`
 
 //show framerate
 let fps = createFps();
-fps.element.style.color = theme.palette[0];
+fps.element.style.color = defaultPalette[0];
 fps.element.style.fontFamily = theme.fontFamily;
 fps.element.style.fontWeight = 500;
 fps.element.style.fontSize = '12px';
@@ -67,7 +72,7 @@ let waveform = createWaveform({
 	worker: true,
 	// autostart: true,
 	offset: null,
-	palette: theme.palette.slice().reverse(),
+	palette: defaultPalette.slice().reverse(),
 	scale: 4,
 	log: false
 });
@@ -102,7 +107,7 @@ isMobile ? tap({
 function init () {
 	//create audio source
 	let audio = createAudio({
-		color: theme.palette[0],
+		color: defaultPalette[0],
 		// autoplay: false,
 		source: 'https://soundcloud.com/aceandtate/ace-tate-sounds-guest-mix-by-jeff-solo'
 		// source: isMobile ? 'sine' : 'https://soundcloud.com/clone-nl/kink-valentines-groove-clone-royal-oak-032'
@@ -159,7 +164,7 @@ function init () {
 			el.style.cssText = `
 				width: 1.5em;
 				height: 1.5em;
-				background-color: rgba(120,120,120,.2);
+				/* background-color: rgba(120,120,120,.2); */
 				margin-left: 0em;
 				display: inline-block;
 				vertical-align: middle;
@@ -168,7 +173,7 @@ function init () {
 			`;
 			el.title = 'Randomize palette';
 			let settings = this.panel;
-			setColors(el, settings.theme.palette, settings.theme.active);
+			setColors(el, defaultPalette);
 
 			el.onclick = () => {
 				// settings.set('colors', 'custom');
@@ -183,7 +188,7 @@ function init () {
 
 				settings.update({
 					palette: palette,
-					style: `background-image: linear-gradient(to top, ${Color(bg).setAlpha(.9).toString()} 0%, ${Color(bg).setAlpha(0).toString()} 100%);`
+					// style: `background-image: linear-gradient(to top, ${Color(bg).setAlpha(.9).toString()} 0%, ${Color(bg).setAlpha(0).toString()} 100%);`
 				});
 				waveform.update({
 					palette: palette.slice().reverse(),
@@ -192,14 +197,14 @@ function init () {
 
 				audio.update({color: palette[0]});
 				fps.element.style.color = waveform.getColor(1);
-				audio.element.style.background = `linear-gradient(to bottom, ${Color(bg).setAlpha(.9).toString()} 0%, ${Color(bg).setAlpha(0).toString()} 100%)`;
+				// audio.element.style.background = `linear-gradient(to bottom, ${Color(bg).setAlpha(.9).toString()} 0%, ${Color(bg).setAlpha(0).toString()} 100%)`;
 
 				el.innerHTML = '';
 				if (active) {
 					palette = palette.slice();
 					palette.unshift(active);
 				}
-				for (var i = 0; i < 3; i++) {
+				for (var i = 0; i < 4; i++) {
 					let colorEl = document.createElement('div');
 					el.appendChild(colorEl);
 					colorEl.className = 'random-palette-color';
@@ -207,7 +212,7 @@ function init () {
 						width: 50%;
 						height: 50%;
 						float: left;
-						background-color: ${palette[i] || 'transparent'}
+						background-color: ${palette[Math.floor(palette.length * i/4)] || 'transparent'}
 					`;
 				}
 			}
@@ -237,7 +242,7 @@ function init () {
 				left: 0;
 				width: 100%;
 				background-color: transparent;
-				background-image: linear-gradient(to top, rgba(255,255,255, .9) 0%, rgba(255,255,255,0) 120%);
+				/*background-image: linear-gradient(to top, rgba(255,255,255, .9) 0%, rgba(255,255,255,0) 120%);*/
 			}
 			.settings-panel-title {
 				width: auto;

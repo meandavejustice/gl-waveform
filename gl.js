@@ -25,11 +25,11 @@ function WaveformGl (opts) {
 
 	Waveform.call(this, opts);
 
-	this.gl = this.context;
+	let gl = this.gl = this.context;
 
 	this.program = program(this.gl, this.vert, this.frag);
 
-	attribute(this.gl, {
+	attribute(gl, {
 		//max, min, mean, variance sequence
 		position: {
 			size: 2,
@@ -37,10 +37,18 @@ function WaveformGl (opts) {
 		}
 	}, this.program);
 
-	texture(this.gl, 'data', {
+	texture(gl, 'data', {
 		height: 1,
-		type: this.gl.FLOAT,
-		format: this.gl.RGBA
+		type: gl.FLOAT,
+		format: gl.RGBA
+	});
+	texture(gl, 'colormap', {
+		type: gl.UNSIGNED_BYTE,
+		format: gl.RGBA,
+		filter: gl.LINEAR,
+		wrap: gl.CLAMP_TO_EDGE,
+		height: this.levels,
+		width: 1
 	});
 }
 
@@ -50,6 +58,7 @@ WaveformGl.prototype.premultipliedAlpha = true;
 WaveformGl.prototype.preserveDrawingBuffer = false;
 WaveformGl.prototype.depth = false;
 WaveformGl.prototype.float = true;
+WaveformGl.prototype.levels = 16;
 
 
 WaveformGl.prototype.update = function (opts) {
@@ -65,6 +74,18 @@ WaveformGl.prototype.update = function (opts) {
 	}
 
 	if (this.alpha && this.background) this.canvas.style.background = this.background;
+
+	if (this.gl) {
+		let colormap = [];
+		for (let i = 0; i < this.levels; i++) {
+			let channels = rgba(this.getColor((i + .5)/this.levels), false);
+			colormap.push(channels[0])
+			colormap.push(channels[1])
+			colormap.push(channels[2])
+			colormap.push(channels[3]*255)
+		}
+		texture(this.gl, 'colormap', colormap);
+	}
 }
 
 Waveform.prototype.render = function () {
@@ -94,10 +115,16 @@ WaveformGl.prototype.draw = function (data) {
 
 	if (!avgs.length) return this;
 
+	let intensities = Array(avgs.length*4).fill(1);
+	for (let i = 0; i < avgs.length; i++) {
+		let v = avgs[i] * .5 + .5;
+		intensities[i*4] = v;
+	}
+
 	texture(this.gl, 'data', {
 		height: 1,
-		width: avgs.length/4,
-		data: avgs
+		width: avgs.length,
+		data: intensities
 	}, this.program);
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
 
@@ -156,12 +183,15 @@ Waveform.prototype.frag = `
 precision highp float;
 
 uniform sampler2D data;
+uniform sampler2D colormap;
 uniform vec2 shape;
 
 void main () {
 	vec2 coord = gl_FragCoord.xy / shape;
 	vec4 intensity = texture2D(data, vec2(coord.x,.5));
-	gl_FragColor = vec4(vec3(intensity.y), 1);
+	vec4 color = texture2D(colormap, vec2(.5, intensity.x));
+	gl_FragColor = color;
+	// gl_FragColor = vec4(vec3(intensity.x), 1);
 }
 `;
 
