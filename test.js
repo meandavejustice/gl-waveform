@@ -42,7 +42,7 @@ for (var name in colorScales) {
 // });
 
 
-let defaultPalette = palettes[Math.floor(Math.random() * palettes.length)];
+let defaultPalette = ['rgb(0,255,255)', 'blue', 'black', 'red', 'rgb(255,255,0)'];//palettes[Math.floor(Math.random() * palettes.length)];
 
 insertCss(`
 	select option {

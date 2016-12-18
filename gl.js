@@ -190,6 +190,7 @@ void main () {
 	vec2 coord = gl_FragCoord.xy / shape;
 	vec4 intensity = texture2D(data, vec2(coord.x,.5));
 	vec4 color = texture2D(colormap, vec2(.5, intensity.x));
+	color.xyz *= pow(1. - abs(.5 - coord.y) * 2., 1.5);
 	gl_FragColor = color;
 	// gl_FragColor = vec4(vec3(intensity.x), 1);
 }
