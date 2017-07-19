@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const extend = require('just-extend')
+const extend = require('object-assign')
 const inherits = require('inherits')
 const Emitter = require('events')
 const inter = require('color-interpolate')
