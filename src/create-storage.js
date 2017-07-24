@@ -11,7 +11,7 @@ let isWorkerAvailable = window.Worker;
 
 let workify;
 if (isWorkerAvailable) {
-	workify = require('webworkify');
+	workify = require('webworkify-webpack');
 }
 
 module.exports = createStorage;
